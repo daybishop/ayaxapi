@@ -2,6 +2,7 @@
 using AyaxApi.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace AyaxApi.Controllers
 {
@@ -14,9 +15,31 @@ namespace AyaxApi.Controllers
             _context = context;
         }
         [HttpGet]
-        public List<Division> Get()
+        public List<Division> Get([FromQuery] DivisionsFilter filter)
         {
-            return _context.Divisions.ToList();
+            var divisions = _context.Divisions.AsQueryable();
+            if (filter.Id != 0)
+            {
+                divisions = divisions.Where(r => r.Id.Equals(filter.Id));
+            }
+
+            if (!string.IsNullOrEmpty(filter.Name))
+            {
+                divisions = divisions.Where(r => r.Name.ToLowerInvariant().Contains(filter.Name));
+            }
+
+            divisions = divisions.OrderBy(r => r.Id);
+            if (filter.Page != 0)
+            {
+                return (divisions
+                    .Skip((filter.Page - 1) * filter.PageSize)
+                    .Take(filter.PageSize).ToList()
+                );
+            }
+            else
+            {
+                return divisions.ToList();
+            }
         }
         [HttpGet("{Id}", Name = "GetDivision")]
         public IActionResult Get(long id)
@@ -67,6 +90,18 @@ namespace AyaxApi.Controllers
             _context.Divisions.Remove(item);
             _context.SaveChanges();
             return NoContent();
+        }
+    }
+    public class DivisionsFilter
+    {
+        private int pageSize = 2;
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public int Page { get; set; }
+        public int PageSize
+        {
+            get => pageSize;
+            set => pageSize = value;
         }
     }
 }

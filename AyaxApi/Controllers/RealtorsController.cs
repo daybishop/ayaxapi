@@ -3,6 +3,7 @@ using AyaxApi.Models;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using System;
 
 namespace AyaxApi.Controllers
 {
@@ -16,9 +17,34 @@ namespace AyaxApi.Controllers
             _context = context;
         }
         [HttpGet]
-        public List<Realtor> Get()
+        public List<Realtor> Get([FromQuery] RealtorsFilter filter)
         {
-            return _context.Realtors.ToList();
+            var realtors = _context.Realtors.AsQueryable();
+            if (filter.Id != 0)
+            {
+                realtors = realtors.Where(r => r.Id.Equals(filter.Id));
+            }
+            if (!string.IsNullOrEmpty(filter.LastName))
+            {
+                realtors = realtors.Where(r => r.Lastname.ToLowerInvariant().Contains(filter.LastName));
+            }
+            if (filter.DivisionId != 0)
+            {
+                realtors = realtors.Where(r => r.DivisionId.Equals(filter.DivisionId));
+            }
+
+            realtors = realtors.OrderBy(r => r.Id);
+            if (filter.Page != 0)
+            {
+                return (realtors
+                    .Skip((filter.Page - 1) * filter.PageSize)
+                    .Take(filter.PageSize).ToList()
+                );
+            }
+            else
+            {
+                return realtors.ToList();
+            }
         }
         [HttpGet("{id}", Name = "GetRealtor")]
         public IActionResult Get(long id)
@@ -71,6 +97,19 @@ namespace AyaxApi.Controllers
             _context.Realtors.Remove(item);
             _context.SaveChanges();
             return NoContent();
+        }
+    }
+    public class RealtorsFilter
+    {
+        private int pageSize = 2;
+        public long Id { get; set; }
+        public string LastName { get; set; }
+        public long DivisionId { get; set; }
+        public int Page { get; set; }
+        public int PageSize
+        {
+            get => pageSize;
+            set => pageSize = value;
         }
     }
 }
