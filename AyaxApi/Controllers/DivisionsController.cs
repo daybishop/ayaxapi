@@ -51,6 +51,23 @@ namespace AyaxApi.Controllers
             }
             return Ok(item);
         }
+        /// <summary>
+        /// Creates a Division item.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     POST /api/divisions
+        ///     {
+        ///        "id": 1,
+        ///        "name": "name",
+        ///     }
+        ///
+        /// </remarks>
+        /// <param name="item"></param>
+        /// <returns>A newly created Division item</returns>
+        /// <response code="201">Returns the newly created item</response>
+        /// <response code="400">If the item is null</response>      
         [HttpPost]
         public IActionResult Create([FromBody] Division item)
         {
@@ -79,6 +96,10 @@ namespace AyaxApi.Controllers
             _context.SaveChanges();
             return NoContent();
         }
+        /// <summary>
+        /// Deletes a specific Division item.
+        /// </summary>
+        /// <param name="id"></param>        
         [HttpDelete("{id}")]
         public IActionResult Delete(long id)
         {

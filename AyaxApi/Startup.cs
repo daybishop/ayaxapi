@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,6 +17,7 @@ using AyaxApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace AyaxApi
 {
@@ -31,12 +34,37 @@ namespace AyaxApi
         public void ConfigureServices(IServiceCollection services)
         {
             SetupAuthentication(services);
-            services.AddDbContext<Context>(opt=> opt.UseInMemoryDatabase("ayax"));
+            services.AddDbContext<Context>(opt => opt.UseInMemoryDatabase("ayax"));
             //services.AddDbContext<Context>(opt => opt.UseSqlite("ayax.db"));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info
+                {
+                    Version = "v1",
+                    Title = "Ayax API",
+                    Description = "A simple example Ayax API",
+                    TermsOfService = "None",
+                    Contact = new Contact
+                    {
+                        Name = "Ayax Ayax",
+                        Email = string.Empty,
+                        Url = "https://ayax/"
+                    },
+                    License = new License
+                    {
+                        Name = "GPL",
+                        Url = "https://ayax/license"
+                    }
+                });
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.XML";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
+
+            });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -47,11 +75,22 @@ namespace AyaxApi
             {
                 app.UseHsts();
             }
-            
+
             app.UseAuthentication();
 
             app.UseHttpsRedirection();
+
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ayax API");
+            });
             app.UseMvc();
+
         }
         private void SetupAuthentication(IServiceCollection services)
         {
@@ -70,6 +109,6 @@ namespace AyaxApi
                             Encoding.UTF8.GetBytes("ayaxayaxayaxayaxayaxayaxayaxayaxayaxayax"))
                     };
                 });
-        }        
+        }
     }
 }
