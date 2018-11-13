@@ -2,10 +2,12 @@
 using AyaxApi.Models;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AyaxApi.Controllers
 {
     [Route("api/realtors")]
+    [Authorize]
     public class RealtorsController : ControllerBase
     {
         private Context _context;
